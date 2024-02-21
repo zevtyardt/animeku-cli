@@ -5,4 +5,4 @@
 </div>
 
 ### screenshot
-  ![](./img/scr.jpg)
+  ![](./img/scr.png)
