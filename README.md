@@ -8,7 +8,7 @@ Streaming anime dan film Asia dengan subtitle Indonesia melalui terminal.
 
 ### instalasi
 > [!NOTE]
-> Pastikan kamu sudah menginstall Rust sebelumnnya, jika belum silahkan klik [tautan berikut](https://rustup.rs/).
+> Pastikan kamu sudah menginstall Rust sebelumnya, jika belum silahkan klik [tautan berikut](https://rustup.rs/).
 > 
 > Untuk pengguna android, install dengan menggunakan perintah berikut `pkg install rust`.
 
