@@ -20,28 +20,6 @@ pub async fn get_filesize(client: &Client, url: &str) -> Option<String> {
     None
 }
 
-pub async fn show_image_thumb(client: &Client, url: &str) -> anyhow::Result<()> {
-    let resp = client
-        .get(url)
-        .timeout(Duration::from_secs(2))
-        .send()
-        .await?;
-    let bytes = resp.bytes().await?;
-
-    let img = image::load_from_memory(&bytes)?;
-    let conf = viuer::Config {
-        transparent: true,
-        width: Some(50),
-        height: Some(30),
-        y: 12,
-        x: 2,
-        ..Default::default()
-    };
-    viuer::print(&img, &conf)?;
-    println!();
-    Ok(())
-}
-
 pub fn get_iframe_src(html: &str, index: usize) -> Option<String> {
     let re = regex::Regex::new(r#"<iframe[^>]+src="([^"]+)"[^>]*>"#).unwrap();
     let mut caps = re.captures_iter(html).map(|cap| cap[1].to_string());
