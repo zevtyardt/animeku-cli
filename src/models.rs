@@ -25,6 +25,7 @@ pub struct Episode {
     pub category_id: u64,
     pub channel_id: u64,
     pub title: String,
+    pub is_anime: bool,
 }
 
 impl std::fmt::Display for Episode {
