@@ -11,21 +11,23 @@ use serde_json::Value;
 use crate::{
     ext::Ext,
     input,
-    models::{Download, Episode, Movie},
+    models::{Download, Episode, Meta, Movie},
     util::{get_filesize, get_real_url},
 };
 
 static USER_PASS: &str = "drakornicojanuar:DIvANTArtBInsTriSkEremeNtOMICErCeSMiQUaKarypsBoari";
 
 pub struct AnimekuCli {
-    cache: HashMap<usize, Vec<Movie>>,
+    movie_cache: HashMap<usize, Vec<Movie>>,
+    pub episode_cache: HashMap<usize, (Vec<Episode>, Meta)>,
     extractor: Box<dyn Ext>,
 }
 
 impl AnimekuCli {
     pub fn new(extractor: Box<dyn Ext>) -> Self {
         Self {
-            cache: HashMap::new(),
+            movie_cache: HashMap::new(),
+            episode_cache: HashMap::new(),
             extractor,
         }
     }
@@ -38,15 +40,15 @@ impl AnimekuCli {
         let mut is_latest = false;
 
         loop {
-            if let std::collections::hash_map::Entry::Vacant(_) = self.cache.entry(page) {
+            if let std::collections::hash_map::Entry::Vacant(_) = self.movie_cache.entry(page) {
                 let (movie_list, total) = self.extractor.search(search_title.into(), page).await?;
                 if page == 1 && !movie_list.is_empty() {
                     println!("ditemukan {} judul anime", total.to_string().green());
                 }
-                self.cache.insert(page, movie_list);
+                self.movie_cache.insert(page, movie_list);
             }
 
-            let mut movie_list = self.cache.get(&page).unwrap().clone();
+            let mut movie_list = self.movie_cache.get(&page).unwrap().clone();
             if movie_list.is_empty() {
                 if page == 1 {
                     eprintln!(
@@ -89,27 +91,32 @@ impl AnimekuCli {
     }
 
     #[allow(unused_must_use)]
-    pub async fn extract_episode(&self, movie: Movie) -> anyhow::Result<Episode> {
+    pub async fn extract_episode(&mut self, movie: Movie) -> anyhow::Result<Episode> {
         print!("{} Mengambil semua daftar episode .. ", "◆".blue());
         stdout().flush()?;
 
-        let (episodes, meta) = self.extractor.get_episodes(movie).await?;
-
+        let channel_id = movie.channel_id as usize;
+        let (episodes, meta) = if let Some(item) = self.episode_cache.get(&channel_id) {
+            item.clone()
+        } else {
+            let item = self.extractor.get_episodes(movie).await?;
+            self.episode_cache.insert(channel_id, item.clone());
+            item
+        };
         if episodes.is_empty() {
             println!("tidak berhasil!");
             std::process::exit(0);
         }
 
         println!("berhasil");
-
         println!(
             "\n  {}{}\n",
             " ".repeat(45 / 2 - 5),
             " Deskripsi ".black().on_truecolor(252, 136, 3)
         );
 
-        if let Some(thumb_url) = meta.thumb_url {
-            self.show_image_thumb(thumb_url).await;
+        if let Some(ref thumb_url) = meta.thumb_url {
+            self.show_image_thumb(thumb_url.to_string()).await;
         }
 
         for (k, v) in meta.data {
@@ -188,6 +195,10 @@ impl AnimekuCli {
         }
         println!("berhasil");
 
+        if urls.len() == 1 && !episode.is_anime {
+            let new_title = urls[0].title.replace("360p SD", "720p HD");
+            urls[0].title = new_title;
+        }
         let selected = input::choice(urls, false)?;
         Ok(selected)
     }
@@ -206,7 +217,7 @@ impl AnimekuCli {
             transparent: true,
             width: Some(50),
             height: Some(30),
-            y: 12,
+            y: 8,
             x: 2,
             ..Default::default()
         };
