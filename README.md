@@ -2,7 +2,7 @@
   
 ![thanks ai hehe](https://i.ibb.co/yqjnrCP/8-WOp-J0-XSca-EN5krf-NNXb-F-transformed.png)
 
-Streaming anime dan film Asia dengan subtitle Indonesia melalui ternal.
+Streaming anime dan film Asia dengan subtitle Indonesia lewat terminal.
 
 </div>
 
