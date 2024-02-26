@@ -1,8 +1,8 @@
 <div align="center">
   
-![thanks ai hehe](https://i.ibb.co/Hp64cXT/removal-ai-84267983-c029-4794-82f0-1812b3d86066-screenshot-20240219-113538.png)
+![thanks ai hehe](https://i.ibb.co/yqjnrCP/8-WOp-J0-XSca-EN5krf-NNXb-F-transformed.png)
 
-Streaming anime dan film Asia dengan subtitle Indonesia melalui terminal.
+Streaming anime dan film Asia dengan subtitle Indonesia melalui ternal.
 
 </div>
 
