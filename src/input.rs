@@ -1,4 +1,3 @@
-use colored::Colorize;
 use dialoguer::theme::ColorfulTheme;
 
 use crate::models::Input;
@@ -19,17 +18,6 @@ pub fn get_user_input() -> anyhow::Result<Input> {
 }
 
 pub fn choice<T: std::fmt::Display + Clone>(options: Vec<T>, fuzzy: bool) -> anyhow::Result<T> {
-    if options
-        .clone()
-        .iter()
-        .filter(|v| !v.to_string().contains("Halaman"))
-        .count()
-        == 1
-    {
-        let selected = options[0].clone();
-        println!("{} Pilih · {}", "✔".green(), selected.to_string().green());
-        return Ok(selected);
-    }
     let selected = if !fuzzy {
         dialoguer::Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Pilih")
