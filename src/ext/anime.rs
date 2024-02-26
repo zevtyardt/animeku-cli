@@ -124,6 +124,7 @@ impl Ext for AnimeExt {
                             .trim_matches('"')
                             .trim()
                             .into(),
+                        is_anime: true,
                     };
                     episodes.push(item);
                 }

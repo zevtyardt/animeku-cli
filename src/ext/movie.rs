@@ -111,6 +111,7 @@ impl Ext for MovieExt {
             category_id: 0,
             channel_id: movie.channel_id,
             title: movie.title,
+            is_anime: false,
         };
 
         if let Some(v) = self.metadata.get(&movie.channel_id) {
