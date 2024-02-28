@@ -35,12 +35,12 @@ impl std::fmt::Display for Episode {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct Download {
+pub struct Stream {
     pub url: String,
     pub title: String,
 }
 
-impl std::fmt::Display for Download {
+impl std::fmt::Display for Stream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.title.trim())
     }
