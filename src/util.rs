@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use colored::Colorize;
 use humansize::{format_size, BINARY};
 use reqwest::{header::CONTENT_LENGTH, Client};
 
@@ -42,4 +43,39 @@ pub async fn get_real_url(client: &Client, url: String) -> anyhow::Result<String
         }
     }
     Ok(url)
+}
+pub async fn show_image_thumb(url: String) {
+    let client = Client::new();
+    if let Ok(resp) = client.get(url).timeout(Duration::from_secs(2)).send().await {
+        if let Ok(bytes) = resp.bytes().await {
+            if let Ok(img) = image::load_from_memory(&bytes) {
+                let conf = viuer::Config {
+                    transparent: true,
+                    width: Some(50),
+                    height: Some(30),
+                    y: 8,
+                    x: 2,
+                    ..Default::default()
+                };
+                if viuer::print(&img, &conf).is_ok() {
+                    println!();
+                }
+            }
+        }
+    }
+}
+
+pub fn clearscreen_and_show_banner() -> anyhow::Result<()> {
+    clearscreen::clear()?;
+
+    eprintln!(
+        "{} v{} {} val \n",
+        r#"
+  ▄▀█ █▄░█ █ █▀▄▀█ █▀▀ █▄▀ █░█ ▄▄ █▀▀ █░░ █
+  █▀█ █░▀█ █ █░▀░█ ██▄ █░█ █▄█ ░░ █▄▄ █▄▄ █ "#
+            .bright_green(),
+        env!("CARGO_PKG_VERSION"),
+        "©".cyan()
+    );
+    Ok(())
 }
