@@ -17,4 +17,4 @@ Langkah berikutnya silahkan *copy paste* teks dibawah.
 cargo install --git https://github.com/zevtyardt/animeku-cli
 ```
 
-Jika sudah, silahkan ketik `animeku-cli` untuk menjalankannya.
+Silahkan tunggu proses penginstallan selesai dan jika sudah, ketik `animeku-cli` untuk menjalankannya.
