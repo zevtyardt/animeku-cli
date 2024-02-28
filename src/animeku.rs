@@ -1,21 +1,16 @@
 use std::{
     collections::HashMap,
     io::{stdout, Write},
-    time::Duration,
 };
 
 use colored::Colorize;
-use reqwest::Client;
-use serde_json::Value;
 
 use crate::{
     ext::Ext,
     input,
-    models::{Download, Episode, Meta, Movie},
-    util::{get_filesize, get_real_url},
+    models::{Episode, Meta, Movie, Stream},
+    util::show_image_thumb,
 };
-
-static USER_PASS: &str = "drakornicojanuar:DIvANTArtBInsTriSkEremeNtOMICErCeSMiQUaKarypsBoari";
 
 pub struct AnimekuCli {
     movie_cache: HashMap<usize, Vec<Movie>>,
@@ -90,7 +85,6 @@ impl AnimekuCli {
         }
     }
 
-    #[allow(unused_must_use)]
     pub async fn extract_episode(&mut self, movie: Movie) -> anyhow::Result<Episode> {
         print!("{} Mengambil semua daftar episode .. ", "◆".blue());
         stdout().flush()?;
@@ -116,7 +110,7 @@ impl AnimekuCli {
         );
 
         if let Some(ref thumb_url) = meta.thumb_url {
-            self.show_image_thumb(thumb_url.to_string()).await;
+            show_image_thumb(thumb_url.to_string()).await;
         }
 
         for (k, v) in meta.data {
@@ -130,62 +124,12 @@ impl AnimekuCli {
         Ok(selected)
     }
 
-    pub async fn extract_download_url(&self, episode: Episode) -> anyhow::Result<Download> {
+    pub async fn extract_stream_urls(&self, episode: Episode) -> anyhow::Result<Stream> {
         print!("{} Memuat tautan unduhan .. ", "◆".green());
         stdout().flush()?;
 
-        let url =
-            "https://animeku.my.id/nontonanime-v77/phalcon/api/get_post_description_secure/v9_4/";
-        let payload = format!("channel_id={}&isAPKvalid=true", episode.channel_id);
-
-        let client = Client::new();
-        let response = client
-            .post(url)
-            .header("Cache-Control", "max-age=0")
-            .header("Data-Agent", "New Aniplex v9.1")
-            .header("Accept-Encoding", "gzip")
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .header("Content-Length", payload.len())
-            .header("Host", "animeku.my.id")
-            .header("Connection", "Keep-Alive")
-            .header("User-Agent", "okhttp/3.12.13")
-            .body(payload)
-            .send()
-            .await?;
-
-        let json = response.json::<Value>().await?;
-        let mut urls = vec![];
-        for (n, reso) in [
-            ("channel_url", "360p SD"),
-            ("channel_url_hd", "720p HD"),
-            ("channel_url_fhd", "1080p FHD"),
-        ] {
-            if let Some(raw_url) = json[n].as_str() {
-                let mut reso = reso.to_string();
-                let mut url = raw_url.trim_matches('"').trim().to_string();
-                if url.contains("whatbox") {
-                    if let Some(new_url) = url.strip_prefix("http://") {
-                        url = format!("http://{}@{}", USER_PASS, new_url);
-                    }
-                } else if url.contains("nontonanime") {
-                    if let Ok(direct_url) = get_real_url(&client, url.clone()).await {
-                        url = direct_url
-                    }
-                }
-
-                if url.starts_with("http") {
-                    if let Some(size) = get_filesize(&client, &url).await {
-                        reso.push_str(" (");
-                        reso.push_str(size.as_str());
-                        reso.push(')')
-                    }
-
-                    urls.push(Download { url, title: reso });
-                }
-            }
-        }
-
-        if urls.is_empty() {
+        let streams = self.extractor.get_stream_urls(episode).await?;
+        if streams.is_empty() {
             eprintln!(
                 "gagal!\n{} {}",
                 "■".red(),
@@ -195,34 +139,7 @@ impl AnimekuCli {
         }
         println!("berhasil");
 
-        if urls.len() == 1 && !episode.is_anime {
-            let new_title = urls[0].title.replace("360p SD", "720p HD");
-            urls[0].title = new_title;
-        }
-        let selected = input::choice(urls, false)?;
+        let selected = input::choice(streams, false)?;
         Ok(selected)
-    }
-
-    pub async fn show_image_thumb(&self, url: String) -> anyhow::Result<()> {
-        let client = Client::new();
-        let resp = client
-            .get(url)
-            .timeout(Duration::from_secs(2))
-            .send()
-            .await?;
-        let bytes = resp.bytes().await?;
-
-        let img = image::load_from_memory(&bytes)?;
-        let conf = viuer::Config {
-            transparent: true,
-            width: Some(50),
-            height: Some(30),
-            y: 8,
-            x: 2,
-            ..Default::default()
-        };
-        viuer::print(&img, &conf)?;
-        println!();
-        Ok(())
     }
 }
