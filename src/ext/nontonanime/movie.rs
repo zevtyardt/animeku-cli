@@ -4,9 +4,12 @@ use async_trait::async_trait;
 use reqwest::Client;
 use serde_json::Value;
 
-use crate::models::{Episode, Meta, Movie};
+use crate::{
+    ext::Ext,
+    models::{Episode, Meta, Movie, Stream},
+};
 
-use super::Ext;
+use super::get_stream_urls;
 
 pub struct MovieExt {
     pub client: Client,
@@ -49,23 +52,6 @@ impl Ext for MovieExt {
         let mut items = Vec::new();
         let json = response.json::<Value>().await?;
 
-        /*
-
-                 Object {
-            "category_name": String(" Anime Movie Sub Indo"),
-            "channel_id": Number(25107),
-            "channel_image": String("1578492231_kimi-to-nami-ni-noretara.jpg"),
-            "channel_name": String("Kimi to Nami ni Noretara Movie"),
-            "count_view": String("65856"),
-            "img_url": String("https://nontonanime.b-cdn.net/nontonanime/upload/1578492231_kimi-to-nami-ni-noretara.jpg"),
-            "lang": String("ID"),
-            "ongoing": Number(0),
-            "rating": String("9.00"),
-            "safe_images": Bool(false),
-            "years": Number(2021),
-        }
-
-                 */
         if let Some(posts) = json["posts"].as_array() {
             for post in posts {
                 if let Some(channel_id) = post["channel_id"].as_u64() {
@@ -119,5 +105,9 @@ impl Ext for MovieExt {
         } else {
             Ok((vec![item], Meta::default()))
         }
+    }
+
+    async fn get_stream_urls(&self, episode: Episode) -> anyhow::Result<Vec<Stream>> {
+        get_stream_urls(&self.client, episode).await
     }
 }

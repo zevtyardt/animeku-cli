@@ -2,9 +2,12 @@ use async_trait::async_trait;
 use reqwest::Client;
 use serde_json::Value;
 
-use crate::models::{Episode, Meta, Movie};
+use crate::{
+    ext::Ext,
+    models::{Episode, Meta, Movie, Stream},
+};
 
-use super::Ext;
+use super::get_stream_urls;
 
 pub struct AnimeExt {
     pub client: Client,
@@ -132,5 +135,9 @@ impl Ext for AnimeExt {
         }
 
         Ok((episodes, meta))
+    }
+
+    async fn get_stream_urls(&self, episode: Episode) -> anyhow::Result<Vec<Stream>> {
+        get_stream_urls(&self.client, episode).await
     }
 }
