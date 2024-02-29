@@ -1,8 +1,14 @@
-use std::time::Duration;
-
 use colored::Colorize;
 use humansize::{format_size, BINARY};
 use reqwest::{header::CONTENT_LENGTH, Client};
+
+#[macro_export]
+macro_rules! regex {
+    ($re:literal $(,)?) => {{
+        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
+        RE.get_or_init(|| regex::Regex::new($re).unwrap())
+    }};
+}
 
 pub async fn get_filesize(client: &Client, url: &str) -> Option<String> {
     if url.contains("nontonanime") {
@@ -22,7 +28,7 @@ pub async fn get_filesize(client: &Client, url: &str) -> Option<String> {
 }
 
 pub fn get_iframe_src(html: &str, index: usize) -> Option<String> {
-    let re = regex::Regex::new(r#"<iframe[^>]+src="([^"]+)"[^>]*>"#).unwrap();
+    let re = regex!(r#"<iframe[^>]+src="([^"]+)"[^>]*>"#);
     let mut caps = re.captures_iter(html).map(|cap| cap[1].to_string());
     caps.nth(index)
 }
@@ -30,11 +36,7 @@ pub fn get_iframe_src(html: &str, index: usize) -> Option<String> {
 pub async fn get_real_url(client: &Client, url: String) -> anyhow::Result<String> {
     if let Some(r) = url.split("url=").nth(1) {
         let ru = r.split("&index=").collect::<Vec<&str>>();
-        let resp = client
-            .get(ru[0])
-            .timeout(Duration::from_secs(2))
-            .send()
-            .await?;
+        let resp = client.get(ru[0]).send().await?;
         let bytes = resp.bytes().await?;
         let body = String::from_utf8_lossy(&bytes);
 
@@ -44,9 +46,10 @@ pub async fn get_real_url(client: &Client, url: String) -> anyhow::Result<String
     }
     Ok(url)
 }
+
 pub async fn show_image_thumb(url: String) {
     let client = Client::new();
-    if let Ok(resp) = client.get(url).timeout(Duration::from_secs(2)).send().await {
+    if let Ok(resp) = client.get(url).send().await {
         if let Ok(bytes) = resp.bytes().await {
             if let Ok(img) = image::load_from_memory(&bytes) {
                 let conf = viuer::Config {
