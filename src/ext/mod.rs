@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use crate::models::{Episode, Meta, Movie, Stream};
 
 pub mod nontonanime;
+pub mod tenflix;
 
 #[async_trait]
 pub trait Ext {
