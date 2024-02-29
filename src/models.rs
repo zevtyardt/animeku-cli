@@ -5,7 +5,7 @@ pub struct Input {
 
 #[derive(Debug, Clone, Default)]
 pub struct Movie {
-    pub channel_id: u64,
+    pub id: String,
     pub title: String,
     pub total_episodes: Option<String>,
 }
@@ -22,10 +22,9 @@ impl std::fmt::Display for Movie {
 
 #[derive(Debug, Clone, Default)]
 pub struct Episode {
-    pub category_id: u64,
-    pub channel_id: u64,
+    pub id: String,
     pub title: String,
-    pub is_anime: bool,
+    pub is_series: bool,
 }
 
 impl std::fmt::Display for Episode {
