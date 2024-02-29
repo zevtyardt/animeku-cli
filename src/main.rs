@@ -3,13 +3,10 @@ use std::io::{stdout, Write};
 use animeku::AnimekuCli;
 use colored::Colorize;
 use dialoguer::theme::ColorfulTheme;
-use ext::{
-    nontonanime::{anime::AnimeExt, movie::MovieExt},
-    Ext,
-};
+use ext::{nontonanime, Ext};
 use tokio::runtime;
 
-use crate::{input::get_user_input, util::clearscreen_and_show_banner};
+use crate::{ext::tenflix, input::get_user_input, util::clearscreen_and_show_banner};
 
 mod animeku;
 mod ext;
@@ -17,15 +14,22 @@ mod input;
 mod models;
 mod util;
 
+fn get_ext(id: usize) -> Box<dyn Ext> {
+    if id == 0 {
+        Box::new(nontonanime::anime::AnimeExt::new())
+    } else if id == 1 {
+        Box::new(nontonanime::movie::MovieExt::new())
+    } else {
+        Box::new(tenflix::TenflixExt::new())
+    }
+}
+
+#[allow(unreachable_code)]
 async fn app() -> anyhow::Result<()> {
     clearscreen_and_show_banner()?;
 
     let input = get_user_input()?;
-    let extractor: Box<dyn Ext> = if input.tipe == 0 {
-        AnimeExt::new()
-    } else {
-        MovieExt::new()
-    };
+    let extractor = get_ext(input.tipe);
 
     let mut animeku = AnimekuCli::new(extractor);
 
@@ -36,7 +40,7 @@ async fn app() -> anyhow::Result<()> {
         clearscreen_and_show_banner()?;
         let episode = animeku.extract_episode(movie.clone()).await?;
         clearscreen_and_show_banner()?;
-        let is_anime = episode.is_anime;
+        let is_series = episode.is_series;
         let download = animeku.extract_stream_urls(episode).await?;
 
         print!("{} Membuka tautan diaplikasi eksternal .. ", "◆".blue());
@@ -45,7 +49,7 @@ async fn app() -> anyhow::Result<()> {
         if open::that(download.url).is_ok() {
             println!("berhasil");
 
-            if !is_anime {
+            if !is_series {
                 break;
             }
             if dialoguer::Confirm::with_theme(&ColorfulTheme::default())
@@ -65,5 +69,10 @@ async fn app() -> anyhow::Result<()> {
 
 fn main() -> anyhow::Result<()> {
     let rt = runtime::Builder::new_multi_thread().enable_all().build()?;
-    rt.block_on(app())
+    rt.block_on(async {
+        if let Err(e) = app().await {
+            println!(" {} {}\n", "■".red(), format!("{:#?}", e).yellow());
+        }
+    });
+    Ok(())
 }
