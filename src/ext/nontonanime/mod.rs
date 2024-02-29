@@ -13,7 +13,7 @@ static USER_PASS: &str = "drakornicojanuar:DIvANTArtBInsTriSkEremeNtOMICErCeSMiQ
 
 pub async fn get_stream_urls(client: &Client, episode: Episode) -> anyhow::Result<Vec<Stream>> {
     let url = "https://animeku.my.id/nontonanime-v77/phalcon/api/get_post_description_secure/v9_4/";
-    let payload = format!("channel_id={}&isAPKvalid=true", episode.channel_id);
+    let payload = format!("channel_id={}&isAPKvalid=true", episode.id);
 
     let response = client
         .post(url)
@@ -60,7 +60,7 @@ pub async fn get_stream_urls(client: &Client, episode: Episode) -> anyhow::Resul
             }
         }
     }
-    if streams.len() == 1 && !episode.is_anime {
+    if streams.len() == 1 && !episode.is_series {
         let new_title = streams[0].title.replace("360p SD", "720p HD");
         streams[0].title = new_title;
     }

@@ -13,15 +13,15 @@ use super::get_stream_urls;
 
 pub struct MovieExt {
     pub client: Client,
-    metadata: HashMap<u64, Meta>,
+    metadata: HashMap<String, Meta>,
 }
 
 impl MovieExt {
-    pub fn new() -> Box<Self> {
-        Box::new(Self {
+    pub fn new() -> Self {
+        Self {
             client: Client::new(),
             metadata: HashMap::new(),
-        })
+        }
     }
 }
 
@@ -54,7 +54,7 @@ impl Ext for MovieExt {
 
         if let Some(posts) = json["posts"].as_array() {
             for post in posts {
-                if let Some(channel_id) = post["channel_id"].as_u64() {
+                if let Some(id) = post["channel_id"].as_u64() {
                     let mut meta = Meta {
                         thumb_url: post
                             .get("img_url")
@@ -73,10 +73,10 @@ impl Ext for MovieExt {
                                 .push((key.into(), v.to_string().trim_matches('"').trim().into()))
                         }
                     }
-                    self.metadata.insert(channel_id, meta);
+                    self.metadata.insert(id.to_string(), meta);
 
                     let item = Movie {
-                        channel_id,
+                        id: id.to_string(),
                         title: post["channel_name"]
                             .to_string()
                             .trim_matches('"')
@@ -94,13 +94,12 @@ impl Ext for MovieExt {
 
     async fn get_episodes(&self, movie: Movie) -> anyhow::Result<(Vec<Episode>, Meta)> {
         let item = Episode {
-            category_id: 0,
-            channel_id: movie.channel_id,
+            id: movie.id.clone(),
             title: movie.title,
-            is_anime: false,
+            is_series: false,
         };
 
-        if let Some(v) = self.metadata.get(&movie.channel_id) {
+        if let Some(v) = self.metadata.get(&movie.id) {
             Ok((vec![item], v.clone()))
         } else {
             Ok((vec![item], Meta::default()))

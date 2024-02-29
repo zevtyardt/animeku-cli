@@ -14,10 +14,10 @@ pub struct AnimeExt {
 }
 
 impl AnimeExt {
-    pub fn new() -> Box<Self> {
-        Box::new(Self {
+    pub fn new() -> Self {
+        Self {
             client: Client::new(),
-        })
+        }
     }
 }
 
@@ -51,12 +51,12 @@ impl Ext for AnimeExt {
 
         if let Some(categories) = json["categories"].as_array() {
             for cat in categories {
-                if let Some(channel_id) = cat["cid"].as_u64() {
-                    if [1, 2].contains(&channel_id) {
+                if let Some(id) = cat["cid"].as_u64() {
+                    if [1, 2].contains(&id) {
                         continue;
                     }
                     let item = Movie {
-                        channel_id,
+                        id: id.to_string(),
                         title: cat["category_name"].to_string().trim_matches('"').into(),
                         total_episodes: Some(
                             cat["count_anime"].as_str().unwrap_or("1").to_string(),
@@ -74,7 +74,7 @@ impl Ext for AnimeExt {
     async fn get_episodes(&self, movie: Movie) -> anyhow::Result<(Vec<Episode>, Meta)> {
         let url =
             "https://animeku.my.id/nontonanime-v77/phalcon/api/get_category_posts_secure/v9_1/";
-        let payload = format!("id={}&isAPKvalid=true", movie.channel_id);
+        let payload = format!("id={}&isAPKvalid=true", movie.id);
 
         let response = self
             .client
@@ -118,16 +118,15 @@ impl Ext for AnimeExt {
 
         if let Some(posts) = json["posts"].as_array() {
             for post in posts {
-                if let Some(channel_id) = post["channel_id"].as_u64() {
+                if let Some(id) = post["channel_id"].as_u64() {
                     let item = Episode {
-                        channel_id,
-                        category_id: post["category_id,"].as_u64().unwrap(),
+                        id: id.to_string(),
                         title: post["channel_name"]
                             .to_string()
                             .trim_matches('"')
                             .trim()
                             .into(),
-                        is_anime: true,
+                        is_series: true,
                     };
                     episodes.push(item);
                 }
