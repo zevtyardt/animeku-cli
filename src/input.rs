@@ -10,8 +10,9 @@ pub fn get_user_input() -> anyhow::Result<Input> {
     let tipe = dialoguer::Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Tipe pencarian")
         .default(0)
-        .item("Anime: on-going dan complete")
-        .item("Movie: live action, film asia dan film anime")
+        .item("Anime on-going dan complete")
+        .item("Film asia dan anime live action")
+        .item("Film Box Office dan TV Series")
         .interact()?;
 
     Ok(Input { title, tipe })
