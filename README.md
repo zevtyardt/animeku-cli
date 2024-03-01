@@ -18,3 +18,9 @@ cargo install --git https://github.com/zevtyardt/animeku-cli
 ```
 
 Silahkan tunggu proses penginstallan selesai dan jika sudah, ketik `animeku-cli` untuk menjalankannya.
+
+Keunggulan tools ini adalah
+- Sangat mudah digunakan
+- Kamu dapat menonton anime, Live Action, Film Luar dan TV Series secara gratis
+- Tidak ada iklan
+- Hasil pencarian lumayan lengkap
