@@ -1,4 +1,5 @@
 use std::io::{stdout, Write};
+use std::process::Command;
 
 use animeku::AnimekuCli;
 use colored::Colorize;
@@ -43,25 +44,41 @@ async fn app() -> anyhow::Result<()> {
         let is_series = episode.is_series;
         let download = animeku.extract_stream_urls(episode).await?;
 
-        print!("{} Membuka tautan diaplikasi eksternal .. ", "◆".blue());
+        print!("{} Membuka tautan diaplikasi eksternal .. {}", "◆".blue(), "\n");
         stdout().flush()?;
 
-        if open::that(download.url).is_ok() {
-            println!("berhasil");
+        if dialoguer::Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt("Apakah kamu ingin membukanya di MPV (Jik Tersedia)")
+        .interact()?
+        {
+            let status = Command::new("mpv")
+            .arg(download.url)
+            .status()
+            .expect("Failed to start 'mpv'");
 
-            if !is_series {
-                break;
-            }
-            if dialoguer::Confirm::with_theme(&ColorfulTheme::default())
-                .with_prompt("Apakah kamu ingin keluar")
-                .interact()?
-            {
+            if !status.success() {
+                eprintln!(
+                        "{} Gagal menjalankan MPV",
+                        "■".red()
+                    );
                 break;
             }
         } else {
-            println!("gagal");
-            break;
-        };
+            if open::that(download.url).is_ok() {
+                if !is_series {
+                    break;
+                }
+                    if dialoguer::Confirm::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Apakah kamu ingin keluar")
+                        .interact()?
+                    {
+                        break;
+                    }
+            } else {
+                println!("gagal");
+                break;
+            };
+        }
     }
     println!();
     Ok(())
