@@ -47,37 +47,39 @@ async fn app() -> anyhow::Result<()> {
         print!("{} Membuka tautan diaplikasi eksternal .. {}", "◆".blue(), "\n");
         stdout().flush()?;
 
-        if dialoguer::Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt("Apakah kamu ingin membukanya di MPV (Jik Tersedia)")
-        .interact()?
-        {
-            let status = Command::new("mpv")
-            .arg(download.url)
-            .status()
-            .expect("Failed to start 'mpv'");
+        if cfg!(target_os = "linux") {
+            if dialoguer::Confirm::with_theme(&ColorfulTheme::default())
+            .with_prompt("Apakah kamu ingin membukanya di MPV (Jika Tersedia)")
+            .interact()?
+            {
+                let status = Command::new("mpv")
+                .arg(download.url)
+                .status()
+                .expect("Failed to start 'mpv'");
 
-            if !status.success() {
-                eprintln!(
+                if !status.success() {
+                    eprintln!(
                         "{} Gagal menjalankan MPV",
                         "■".red()
                     );
-                break;
-            }
-        } else {
-            if open::that(download.url).is_ok() {
-                if !is_series {
                     break;
                 }
+            } else {
+                if open::that(download.url).is_ok() {
+                    if !is_series {
+                        break;
+                    }
                     if dialoguer::Confirm::with_theme(&ColorfulTheme::default())
                         .with_prompt("Apakah kamu ingin keluar")
                         .interact()?
                     {
                         break;
                     }
-            } else {
-                println!("gagal");
-                break;
-            };
+                } else {
+                    println!("gagal");
+                    break;
+                };
+            }
         }
     }
     println!();
